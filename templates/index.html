@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>💬 واتساب ويب</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="sidebar">
+      <h2>جهات الاتصال</h2>
+      {% for contact in messages_in|groupby('from') %}
+      <div class="contact" onclick="loadChat('{{ contact.grouper }}')">
+        {{ contact.list[0].name or contact.grouper }}
+      </div>
+      {% endfor %}
+      <div style="text-align: center; padding: 10px">
+        <form
+          action="/upload_excel"
+          method="post"
+          enctype="multipart/form-data"
+        >
+          <input type="file" name="excel_file" accept=".xlsx" required />
+          <button type="submit">رفع ملف Excel</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="chat-area">
+      <div class="messages" id="chatBox">
+        <p>اختر جهة اتصال من اليسار لعرض المحادثة</p>
+      </div>
+
+      <form
+        class="input-area"
+        method="post"
+        action="/send_single"
+        enctype="multipart/form-data"
+      >
+        <input type="hidden" name="number" id="currentNumber" />
+        <input type="text" name="message" placeholder="اكتب رسالة..." />
+        <input type="file" name="image" accept="image/*" class="small-btn" />
+
+        <select name="template" id="templateSelect" onchange="fillTemplate()">
+          <option value="">نص عادي</option>
+          <option value="marketing_dee">🖼 عرض تسويقي</option>
+          <option value="verification">🔒 رمز التحقق (EN)</option>
+          <option value="verification_ar">🔒 رمز التحقق (AR)</option>
+        </select>
+
+        <button type="submit" class="small-btn">📤 إرسال</button>
+      </form>
+    </div>
+
+    <script>
+      const allMessages = {{ all_messages|tojson }};
+
+      function loadChat(number) {
+        const chatBox = document.getElementById("chatBox");
+        chatBox.innerHTML = "";
+        document.getElementById("currentNumber").value = number;
+
+        allMessages
+          .filter((msg) => msg.from === number || msg.to === number)
+          .forEach((msg) => {
+            const div = document.createElement("div");
+            div.classList.add("message");
+            div.classList.add(
+              msg.direction === "in" ? "from-them" : "from-me"
+            );
+
+            let content = "";
+            if (msg.text) content += `<p>${msg.text}</p>`;
+
+            const imgUrl = msg.image_url || msg.media || (msg.media_id ? `/media/${msg.media_id}.jpg` : "");
+            if (imgUrl && (imgUrl.endsWith(".jpg") || imgUrl.endsWith(".png"))) {
+              content += `<img src="${imgUrl}" style="max-width:200px; margin-top:5px;" />`;
+            }
+
+            div.innerHTML = content;
+            chatBox.appendChild(div);
+          });
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      function fillTemplate() {
+        const selected = document.getElementById("templateSelect").value;
+        const messageInput = document.querySelector("input[name='message']");
+        const imageInput = document.querySelector("input[name='image']");
+
+        if (selected === "marketing_dee") {
+          imageInput.required = true;
+          const currentContact = document.getElementById("currentNumber").value;
+          const matched = allMessages.find(
+            (m) => m.from === currentContact || m.to === currentContact
+          );
+          const name = matched?.name || "العميل العزيز";
+          messageInput.value = name;
+        } else if (selected === "verification" || selected === "verification_ar") {
+          imageInput.required = false;
+          messageInput.value = "";
+          messageInput.placeholder = "ادخل كود التحقق {{1}}";
+        } else {
+          imageInput.required = false;
+          messageInput.placeholder = "اكتب رسالة...";
+        }
+      }
+    </script>
+  </body>
+</html>

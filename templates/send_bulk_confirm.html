@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تأكيد الإرسال الجماعي</title>
+  <style>
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+    button, input, select { margin: 10px 0; padding: 8px; }
+  </style>
+</head>
+<body>
+  <h2>📤 تأكيد الإرسال الجماعي</h2>
+
+  <form action="/send_bulk" method="post" enctype="multipart/form-data">
+    <label>نص الرسالة أو اسم المتغير:</label>
+    <input type="text" name="message" required placeholder="مثلاً: عميلنا العزيز"><br>
+
+    <label>نوع الإرسال:</label>
+    <select name="type" id="type" onchange="toggleImage()">
+      <option value="text">نص عادي</option>
+      <option value="template">قالب تسويق (marketing_dee)</option>
+    </select><br>
+
+    <div id="imageDiv" style="display:none">
+      <label>📷 صورة القالب:</label>
+      <input type="file" name="image">
+    </div>
+
+    <label><input type="checkbox" id="selectAll" onclick="toggleAll(this)"> تحديد الكل</label>
+
+    <table>
+      <thead>
+        <tr>
+          <th>اختيار</th>
+          <th>رقم الهاتف</th>
+          <th>الاسم</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in numbers %}
+          <tr>
+            <td><input type="checkbox" name="selected_numbers" value="{{ item.number }}"></td>
+            <td>{{ item.number }}</td>
+            <td>{{ item.name }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button type="submit">🚀 إرسال الآن</button>
+  </form>
+
+  <script>
+    function toggleAll(source) {
+      const checkboxes = document.querySelectorAll("input[name='selected_numbers']");
+      checkboxes.forEach(ch => ch.checked = source.checked);
+    }
+
+    function toggleImage() {
+      const type = document.getElementById("type").value;
+      document.getElementById("imageDiv").style.display = (type === "template") ? "block" : "none";
+    }
+  </script>
+</body>
+</html>

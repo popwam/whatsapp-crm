@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>نتيجة الإرسال الجماعي</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    .result { padding: 10px; margin-bottom: 10px; background: white; border-radius: 6px; }
+    .success { color: green; }
+    .fail { color: red; }
+  </style>
+</head>
+<body>
+  <h2>📊 نتيجة الإرسال</h2>
+  {% for item in results %}
+    <div class="result">
+      رقم: <b>{{ item.number }}</b> —
+      {% if "failed" in item.status %}
+        <span class="fail">فشل: {{ item.status }}</span>
+      {% else %}
+        <span class="success">تم الإرسال ✅</span>
+      {% endif %}
+    </div>
+  {% endfor %}
+  <a href="/" style="display:block; margin-top:20px;">🔙 الرجوع للصفحة الرئيسية</a>
+</body>
+</html>

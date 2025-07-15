@@ -1,0 +1,38 @@
+[
+  {
+    "from": "201144554481",
+    "name": "moamenahmedmandour",
+    "timestamp": "1752591162",
+    "direction": "in",
+    "type": "text",
+    "text": "Good evening"
+  },
+  {
+    "from": "أنت",
+    "to": "201144554481",
+    "timestamp": "2025-07-15 17:53:19",
+    "direction": "out",
+    "status": "read",
+    "image_url": "/media/mmdoh.jpg",
+    "message_id": "wamid.HBgMMjAxMTQ0NTU0NDgxFQIAERgSQ0IxNDUwQjYxMjM1MDE5MkMxAA==",
+    "updated": "2025-07-15 17:53:26"
+  },
+  {
+    "from": "أنت",
+    "to": "201144554481",
+    "timestamp": "2025-07-15 17:53:40",
+    "direction": "out",
+    "status": "read",
+    "text": "good too",
+    "message_id": "wamid.HBgMMjAxMTQ0NTU0NDgxFQIAERgSNjRGMUUyMjFGNjg2RUQ3QjEwAA==",
+    "updated": "2025-07-15 17:53:41"
+  },
+  {
+    "from": "16465894168",
+    "name": "16465894168",
+    "timestamp": "1752592220",
+    "direction": "in",
+    "type": "text",
+    "text": "*Take a minute right now to send your first message*\n\nBy sending a quick test message to yourself, you can experience messaging before you dive in with customers.\n\nNow, let's send a message:\n1. Open WhatsApp on your personal phone, and send a test message (eg. Testing 123) to your WhatsApp business phone number: +20 10 26555251\n2. Check your test messages on your solution provider's inbox to find your test message\n3. Reply to the test message, and see how the reply looks on your personal phone"
+  }
+]
