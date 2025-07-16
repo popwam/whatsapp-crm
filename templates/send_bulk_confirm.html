@@ -41,7 +41,9 @@
       <label>نوع الإرسال:</label>
       <select name="type" id="type" onchange="toggleImage()">
         <option value="text">نص عادي</option>
-        <option value="marketing_dee">قالب تسويق (marketing_dee)</option></select
+        <option value="marketing_dee">
+          قالب تسويق (marketing_dee)
+        </option></select
       ><br />
 
       <div id="imageDiv" style="display: none">
@@ -69,7 +71,7 @@
               <input
                 type="checkbox"
                 name="selected_numbers"
-                value="{{ item.number }}"
+                value="{{ item.number }}|{{ item.name }}"
               />
             </td>
             <td>{{ item.number }}</td>
