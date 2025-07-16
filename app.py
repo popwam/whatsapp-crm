@@ -301,6 +301,45 @@ def upload_excel():
 @app.route("/send_bulk", methods=["POST"])
 def send_bulk():
     selected_numbers = request.form.getlist("selected_numbers")
+    message = request.form.get("message", "")  # fallback
+    template = request.form.get("type")
+    image_file = request.files.get("image")
+
+    if not selected_numbers:
+        return "❌ لازم تختار أرقام", 400
+
+    sender = MessageSender()
+    results = []
+
+    # حفظ الصورة مرة واحدة لو القالب محتاج صورة
+    image_path = None
+    if template == "marketing_dee":
+        if not image_file or image_file.filename == "":
+            return "❌ يجب رفع صورة لهذا القالب", 400
+        image_path = os.path.join("uploads", image_file.filename)
+        image_file.save(image_path)
+
+    for raw in selected_numbers:
+        try:
+            number, name = raw.split("|") if "|" in raw else (raw, "")
+            name = name.strip() or message or "عميلنا العزيز"
+
+            if template == "marketing_dee":
+                res = sender.send_template_image(template, number, image_path, name)
+
+            elif template == "welcome_template":
+                res = sender.send_template(number, "welcome_template")
+
+            else:
+                res = sender.send_message(number, message)
+
+            results.append({"number": number, "status": "sent"})
+
+        except Exception as e:
+            results.append({"number": number, "status": f"failed: {e}"})
+
+    return render_template("send_bulk_result.html", results=results)
+    selected_numbers = request.form.getlist("selected_numbers")
     message = request.form.get("message", "")  # fallback لو مفيش اسم
     template = request.form.get("type")
     image_file = request.files.get("image")
