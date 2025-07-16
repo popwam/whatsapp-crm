@@ -99,6 +99,7 @@ def index():
 def send_bulk_confirm():
     numbers = session.get("bulk_numbers", [])
     return render_template("send_bulk_confirm.html", numbers=numbers)
+
 @app.route("/send_single", methods=["POST"])
 def send_single():
     number = request.form.get("number")
@@ -299,9 +300,9 @@ def upload_excel():
 
 @app.route("/send_bulk", methods=["POST"])
 def send_bulk():
-    selected_numbers = request.form.getlist("selected_numbers")  # جاي من الـ checkbox
-    message = request.form.get("message", "")
-    template = request.form.get("template")
+    selected_numbers = request.form.getlist("selected_numbers")
+    message = request.form.get("message", "")  # fallback لو مفيش اسم
+    template = request.form.get("type")
     image_file = request.files.get("image")
 
     if not selected_numbers:
@@ -310,16 +311,20 @@ def send_bulk():
     sender = MessageSender()
     results = []
 
-    for number in selected_numbers:
+    for raw in selected_numbers:
         try:
-            name = number.split("|")[1] if "|" in number else ""
-            number = number.split("|")[0]
+            # فصل الرقم والاسم
+            number, name = raw.split("|") if "|" in raw else (raw, "")
+            name = name.strip() or message  # fallback لو الاسم فاضي
+
             if template == "marketing_dee":
                 if not image_file:
                     continue
+                # حفظ الصورة
                 image_path = os.path.join("uploads", image_file.filename)
                 image_file.save(image_path)
-                res = sender.send_template_image(template, number, image_path, name or message)
+                # إرسال القالب بصورة ومتغير الاسم
+                res = sender.send_template_image(template, number, image_path, name)
             elif template in ["verification", "verification_ar"]:
                 link = request.form.get("link")
                 res = sender.send_template(number, template, parameters=[message, link])
