@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
 import pandas as pd
 import json, os
+import time
+from threading import Thread
 from datetime import datetime
 from dotenv import load_dotenv
 from sender import MessageSender
@@ -311,20 +313,41 @@ def upload_excel():
             return f"❌ خطأ أثناء قراءة الملف: {str(e)}", 400
 
     return render_template("upload_excel.html")
-@app.route("/send_bulk", methods=["POST"])
+def process_bulk(selected_numbers, message, template, image_path, link):
+    sender = MessageSender()
+
+    for idx, raw in enumerate(selected_numbers):
+        try:
+            number, name = raw.split("|") if "|" in raw else (raw, "")
+            name = name.strip() or message or "عميلنا العزيز"
+
+            if template == "marketing_dee":
+                sender.send_template_image(template, number, image_path, name)
+
+            elif template in ["verification", "verification_ar"]:
+                sender.send_template(number, template, parameters=[message, link])
+
+            elif template == "welcome_template":
+                sender.send_template(number, "welcome_template")
+
+            elif template == "text":
+                sender.send_message(number, message)
+
+            print(f"[{idx+1}/{len(selected_numbers)}] ✅ sent to {number}")
+        except Exception as e:
+            print(f"[{idx+1}/{len(selected_numbers)}] ❌ failed for {number}: {e}")
+
+        time.sleep(1.5)  # تأخير 1.5 ثانية بين كل رسالة (مهم علشان WhatsApp API)@app.route("/send_bulk", methods=["POST"])
 def send_bulk():
     selected_numbers = request.form.getlist("selected_numbers")
-    message = request.form.get("message", "")  # fallback
+    message = request.form.get("message", "")
     template = request.form.get("type")
+    link = request.form.get("link", "")
     image_file = request.files.get("image")
 
     if not selected_numbers:
         return "❌ لازم تختار أرقام", 400
 
-    sender = MessageSender()
-    results = []
-
-    # حفظ الصورة مرة واحدة لو القالب محتاج صورة
     image_path = None
     if template == "marketing_dee":
         if not image_file or image_file.filename == "":
@@ -332,73 +355,10 @@ def send_bulk():
         image_path = os.path.join("uploads", image_file.filename)
         image_file.save(image_path)
 
-    for raw in selected_numbers:
-        try:
-            number, name = raw.split("|") if "|" in raw else (raw, "")
-            name = name.strip() or message or "عميلنا العزيز"
+    # شغل الإرسال في الخلفية
+    Thread(target=process_bulk, args=(selected_numbers, message, template, image_path, link)).start()
 
-            if template == "marketing_dee":
-                res = sender.send_template_image(template, number, image_path, name)
-
-            elif template == "welcome_template":
-                res = sender.send_template(number, "welcome_template")
-
-            else:
-                res = sender.send_message(number, message)
-
-            results.append({"number": number, "status": "sent"})
-
-        except Exception as e:
-            results.append({"number": number, "status": f"failed: {e}"})
-
-    return render_template("send_bulk_result.html", results=results)
-    selected_numbers = request.form.getlist("selected_numbers")
-    message = request.form.get("message", "")  # fallback لو مفيش اسم
-    template = request.form.get("type")
-    image_file = request.files.get("image")
-
-    if not selected_numbers:
-        return "❌ لازم تختار أرقام", 400
-
-    sender = MessageSender()
-    results = []
-
-    for raw in selected_numbers:
-        try:
-            # فصل الرقم والاسم
-            number, name = raw.split("|") if "|" in raw else (raw, "")
-            name = name.strip() or message  # fallback لو الاسم فاضي
-
-            if template == "marketing_dee":
-                if not image_file:
-                    results.append({"number": number, "status": "failed: الصورة مطلوبة مع القالب"})
-                    continue
-                image_path = os.path.join("uploads", image_file.filename)
-                image_file.save(image_path)
-                res = sender.send_template_image(template, number, image_path, name)
-
-            elif template in ["verification", "verification_ar"]:
-                link = request.form.get("link")
-                res = sender.send_template(number, template, parameters=[message, link])
-
-            elif template == "welcome_template":
-                res = sender.send_template(number, "welcome_template")
-
-            elif template == "text":
-                if not message.strip():
-                    results.append({"number": number, "status": "failed: الرسالة النصية فاضية"})
-                    continue
-                res = sender.send_message(number, message)
-
-            else:
-                results.append({"number": number, "status": "failed: نوع الإرسال غير معروف"})
-                continue
-
-            results.append({"number": number, "status": "sent"})
-        except Exception as e:
-            results.append({"number": number, "status": f"failed: {e}"})
-
-    return render_template("send_bulk_result.html", results=results)
+    return "📤 تم بدء الإرسال... تابع الحالة من اللوج أو اضف تتبع لاحقاً", 202
 
 if __name__ == "__main__":
     app.run()
