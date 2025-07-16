@@ -319,19 +319,28 @@ def send_bulk():
 
             if template == "marketing_dee":
                 if not image_file:
+                    results.append({"number": number, "status": "failed: الصورة مطلوبة مع القالب"})
                     continue
-                # حفظ الصورة
                 image_path = os.path.join("uploads", image_file.filename)
                 image_file.save(image_path)
-                # إرسال القالب بصورة ومتغير الاسم
                 res = sender.send_template_image(template, number, image_path, name)
+
             elif template in ["verification", "verification_ar"]:
                 link = request.form.get("link")
                 res = sender.send_template(number, template, parameters=[message, link])
+
             elif template == "welcome_template":
                 res = sender.send_template(number, "welcome_template")
-            else:
+
+            elif template == "text":
+                if not message.strip():
+                    results.append({"number": number, "status": "failed: الرسالة النصية فاضية"})
+                    continue
                 res = sender.send_message(number, message)
+
+            else:
+                results.append({"number": number, "status": "failed: نوع الإرسال غير معروف"})
+                continue
 
             results.append({"number": number, "status": "sent"})
         except Exception as e:

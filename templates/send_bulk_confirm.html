@@ -34,13 +34,14 @@
       <input
         type="text"
         name="message"
+        id="messageInput"
         placeholder="مثلاً: عميلنا العزيز"
       /><br />
 
       <label>نوع الإرسال:</label>
       <select name="type" id="type" onchange="toggleImage()">
         <option value="text">نص عادي</option>
-        <option value="template">قالب تسويق (marketing_dee)</option></select
+        <option value="marketing_dee">قالب تسويق (marketing_dee)</option></select
       ><br />
 
       <div id="imageDiv" style="display: none">
@@ -94,7 +95,7 @@
         const imageDiv = document.getElementById("imageDiv");
         const messageInput = document.getElementById("messageInput");
 
-        if (type === "template") {
+        if (type === "marketing_dee") {
           imageDiv.style.display = "block";
           messageInput.required = false;
           messageInput.placeholder = "❌ غير مطلوب مع القوالب";
