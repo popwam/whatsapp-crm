@@ -97,9 +97,14 @@ def index():
 )
 @app.route("/send_bulk_confirm")
 def send_bulk_confirm():
-    numbers = session.get("bulk_numbers", [])
-    return render_template("send_bulk_confirm.html", numbers=numbers)
+    filepath = "data/bulk_numbers.json"
+    if not os.path.exists(filepath):
+        return "❌ لا يوجد بيانات", 400
 
+    with open(filepath, "r", encoding="utf-8") as f:
+        numbers = json.load(f)
+
+    return render_template("send_bulk_confirm.html", numbers=numbers)
 @app.route("/send_single", methods=["POST"])
 def send_single():
     number = request.form.get("number")
@@ -281,23 +286,31 @@ def webhook():
 def upload_excel():
     if request.method == "POST":
         file = request.files.get("excel_file")
-        if not file or not file.filename.endswith(".xlsx"):
+        if not file or not file.filename or not file.filename.lower().endswith(".xlsx"):
             return "❌ برجاء رفع ملف Excel صالح", 400
 
-        df = pd.read_excel(file)
+        try:
+            df = pd.read_excel(file)
+            df.columns = df.columns.str.strip().str.lower()
 
-        numbers = []
-        for _, row in df.iterrows():
-            number = str(row.get("number") or "").strip()
-            name = str(row.get("name") or "").strip()
+            numbers = []
+            for _, row in df.iterrows():
+                number = str(row.get("number") or "").strip()
+                name = str(row.get("name") or "").strip()
+                if number:
+                    numbers.append({"number": number, "name": name})
 
-            if number:
-                numbers.append({"number": number, "name": name})
-        session["bulk_numbers"] = numbers
-        return redirect("/send_bulk_confirm")
+            # اكتب البيانات في ملف ثابت
+            os.makedirs("data", exist_ok=True)
+            with open("data/bulk_numbers.json", "w", encoding="utf-8") as f:
+                json.dump(numbers, f, ensure_ascii=False)
+
+            return redirect("/send_bulk_confirm")
+
+        except Exception as e:
+            return f"❌ خطأ أثناء قراءة الملف: {str(e)}", 400
 
     return render_template("upload_excel.html")
-
 @app.route("/send_bulk", methods=["POST"])
 def send_bulk():
     selected_numbers = request.form.getlist("selected_numbers")
