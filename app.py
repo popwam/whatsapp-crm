@@ -337,7 +337,11 @@ def process_bulk(selected_numbers, message, template, image_path, link):
         except Exception as e:
             print(f"[{idx+1}/{len(selected_numbers)}] ❌ failed for {number}: {e}")
 
-        time.sleep(1.5)  # تأخير 1.5 ثانية بين كل رسالة (مهم علشان WhatsApp API)@app.route("/send_bulk", methods=["POST"])
+        time.sleep(1.5)  # تأخير بسيط بين كل رسالة
+
+# ← سطر فاصل هنا مهم
+
+@app.route("/send_bulk", methods=["POST"])
 def send_bulk():
     selected_numbers = request.form.getlist("selected_numbers")
     message = request.form.get("message", "")
@@ -355,10 +359,8 @@ def send_bulk():
         image_path = os.path.join("uploads", image_file.filename)
         image_file.save(image_path)
 
-    # شغل الإرسال في الخلفية
     Thread(target=process_bulk, args=(selected_numbers, message, template, image_path, link)).start()
 
     return "📤 تم بدء الإرسال... تابع الحالة من اللوج أو اضف تتبع لاحقاً", 202
-
 if __name__ == "__main__":
     app.run()
